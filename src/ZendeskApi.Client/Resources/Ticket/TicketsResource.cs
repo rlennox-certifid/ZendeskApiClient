@@ -284,11 +284,14 @@ namespace ZendeskApi.Client.Resources
             IEnumerable<TicketUpdateRequest> tickets,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await UpdateAsync<JobStatusResponse, TicketListRequest<TicketUpdateRequest>>(
+            var response = await UpdateAsync<SingleJobStatusResponse, TicketListRequest<TicketUpdateRequest>>(
                 $"{ResourceUri}/update_many.json",
                 new TicketListRequest<TicketUpdateRequest>(tickets),
                 "update-many-tickets",
                 cancellationToken: cancellationToken);
+            
+            return response?
+                .JobStatus;
         }
 
         public async Task<JobStatusResponse> TagListsUpdateAsync(

@@ -92,5 +92,37 @@ namespace ZendeskApi.Client.IntegrationTests.Resources
             var ticketIdsPageTwo = ticketsPageTwo.Select(ticket => ticket.Id).ToList();
             Assert.NotEqual(ticketIdsPageOne, ticketIdsPageTwo);
         }
+
+        [Fact]
+        public async Task UpdateAsync_WhenCalledWithValidTicket_ShouldReturnJobStatusResponse()
+        {
+            var client = _clientFactory.GetClient();
+            var createdTicket = await client.Tickets.CreateAsync(new Requests.TicketCreateRequest
+            {
+                Comment = new TicketComment { Body = "UpdateAsync ticket" },
+                Subject = "UpdateAsync ticket subject"
+            });
+
+            try
+            {
+                var ticketsToUpdate = new List<Requests.TicketUpdateRequest> {
+                    new Requests.TicketUpdateRequest(createdTicket.Ticket.Id)
+                    {
+                        Subject = $"Updated ticket {createdTicket.Ticket.Id}",
+                        Comment = new TicketComment { Body = "This ticket was updated" }
+                    }
+                };
+                var jobStatus = await client.Tickets.UpdateAsync(ticketsToUpdate);
+
+                Assert.NotNull(jobStatus);
+                Assert.False(string.IsNullOrEmpty(jobStatus.Id), "Job status ID should not be empty");
+                Assert.False(string.IsNullOrEmpty(jobStatus.Status), "Job status status should not be empty");
+                Assert.NotNull(jobStatus.Url);
+            }
+            finally
+            {
+                await client.Tickets.DeleteAsync(createdTicket.Ticket.Id);
+            }
+        }
     }
 }
